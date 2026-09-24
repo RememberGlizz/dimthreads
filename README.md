@@ -1,63 +1,78 @@
-# 🌌 Dimensional Threading ReForked
-Optimises dimension processing assigning them independent threads.
-Having a lot of dimensions on multi-core CPU will increase performance significantly.
-Works on singleplayer and multiplayer, can be installed on server-side only,
-but having it also on client-side is always a plusplus.
+# CobbleClub Dimensional Threading — Fabric 1.21.1
 
+CobbleClub-maintained Fabric 1.21.1 port of **Dimensional Threading ReForked**.
 
-This is the unofficial for of DimensionalThreading-Reforged by ccr4ft3r
-which is also an unofficial port of DimensionalThreading by WearBlackAllDay
-which is also an defivated mod of another dimension mod by 2No2Name but i can't find it.
-Also contains the WorldThreaded patches by 2No2Name, making this project the fork²
+This fork exists specifically so CobbleClub can validate and maintain dimension-parallel ticking on its Fabric 1.21.1 server stack without depending on the stale published 1.21.1 beta jar.
 
-## 🛠️ Changes among ports
-- Fixed [#17](https://github.com/CCr4ft3r/DimensionalThreading-Reforged/issues/17)
-- Support for 1.16.5 ~ 1.21.1 for Forge, NeoForge and Fabric
-- Rewrite of latch and crash report handling
-- Fixed Cupboard incompatibility (log spam + entities don't spawn)
+> **Status: EXPERIMENTAL / validation build.**
+> Do not treat this branch as production-safe until Cobblemon, Multiworld, RCT, claims, RTP, cross-world teleporting, world saves/restarts, and high-load resource-world activity have all been stress-tested.
 
-Mod wants to be vanilla-like, making it compatible with Carpet Mod, Sodium/Embeddium,
-ImmersivePortals and many other mods.
+## CobbleClub port
 
-# 📖 Quick Wiki
-**DimThread comes with 2 new Gamerules:**
-- ``/gamerule dimthread_active true/false``; enables/disables the mod
-- ``/gamerule dimthread_thread_count <count>``; changes the amount of threads used
-- ``/gamerule dimthread_skip_crashing true/false``; skip crashes on dimensions
+Target branch: `cobbleclub-1.21.1-fabric`
 
-**Know incompatibilities**
-- ``AppliedEnergistics2``: dimensional features doesn't works (no crashes)
+Target environment:
+- Minecraft 1.21.1
+- Fabric
+- Java 21
+- Server-side use supported
+- Original mod id intentionally retained as `dimthread` for compatibility with the existing gamerules/config/mixin identifiers.
 
-## 📱 Contact and Support
-You can contact me on my Discord Server or the mod's Github Repository for support...
-or if you want to talk about the life.
----
-# 🎮 Squash the mod power - Rent a multi-core server
-[![](https://i.imgur.com/2WFmJzc.png)](https://www.kinetichosting.net/game-servers)
----
+CobbleClub-specific changes currently include:
+- Fixed the Fabric 1.21.1 `EntityMixin` injection so Mojang-named `changeDimension` is remapped correctly into production mappings.
+- Fixed the Fabric 1.21.1 `MinecraftServerMixin` `getAllLevels()` WrapOperation target so it is remapped correctly.
+- Branded the build artifact and metadata as the CobbleClub maintenance port.
+- Added an automated Java 21 build workflow for this port.
+- Preserved the original LGPLv3 license and upstream attribution.
 
-# ❓Frequent Answers and Questions
-### Mod change Vanilla behaviour?
-- DimThreads is aimed to keep the vanilla-like behavior with no much derivations. If you find any difference from vanilla (excepting better performance) open an issue.
-### Dimensions can get de-synchronized?
-- Nope. DimThread will always synchronize the dimensions it threads with each other, setting the overall MSPT to the slowest individual dimension.
+The first fixes address the startup failures where the published Fabric 1.21.1 jar could not find `changeDimension` and could not find the `getAllLevels()` target at runtime.
 
-### How many dimensions are supported?
-- Yes, but you will have to adjust the GameRule accordingly. Or the config file to override default values
+## What the mod does
 
-### Server will run faster assigning more threads than dimensions on my server?
-- No, the mod can only assign one dimension to one thread.
+Dimensional Threading moves dimension/world ticking onto independent worker threads and waits for all threaded worlds to complete before the global tick continues. With many active dimensions on a multi-core CPU, this can make significantly better use of available CPU cores.
 
-### Can i use DimThread if i have less threads on my CPU than dimensions?
-- The mod will not crash if you do not have enough threads available, but it will make the game slower. You should always have at leastDimensionCount + 1threads available.
+It does **not** make one individual dimension's tick infinitely parallel. The slowest dimension can still determine overall tick time.
 
-### How is compatibility with other mods?
-- Compatibility for very well-know mods is always ensured like Lithium/Radiun/Canary or ModernFix. Since not every author writes their mod thread safe, some mods will experiment minor issues on their features. This includes: AE2, Bigger Reactors, Chunky Pregenerator, and few others
+## Gamerules
 
-### What happens if the thread counts exceeds CPU thread counts
-- Nothing, maybe a little-bit slow performance but nothing to worry about
+- `/gamerule dimthread_active true|false` — enables/disables threaded dimension ticking.
+- `/gamerule dimthread_thread_count <count>` — controls worker thread count.
+- `/gamerule dimthread_skip_crashing true|false` — experimental crash-skipping behavior; not recommended for production.
 
-### Why spark show a high usage from DimThreads
-- Spark is a developer-tool mod and should be threated as-is, Dimthreads overrides basic Minecraft behavior to replicate it on other threads besides "Server Thread". we delegate all the tick work to Dimthreads threeads, and make server thread sit down and wait until all threads ends
+For CobbleClub, thread count should be chosen from the actual loaded dimension count and available CPU threads after compatibility testing.
 
----
+## Required CobbleClub validation
+
+Before calling this reliable, test all of the following under simultaneous multi-world load:
+
+- Players active in all CobbleClub worlds
+- Cobblemon spawning, catching, evolution and storage
+- Player-vs-wild and trainer battles
+- RCT trainers
+- Multiworld teleports and portals
+- Claims/subclaims
+- RTP and Wild menu teleporting
+- Resource-world mining and chunk activity
+- Death/respawn
+- Economy, contracts, kits and rewards
+- World saving
+- Server restart/reload cycles
+- C2ME interaction if C2ME remains enabled
+- Spark profiling for per-world tick distribution and stalls
+
+## Upstream lineage and license
+
+This is a modified LGPLv3 fork. The original project history and attribution are intentionally retained.
+
+- Dimensional Threading ReForked — SrRapero720
+- DimensionalThreading-Reforged — CCr4ft3r
+- Dimensional Threading — WearBlackAllDay
+- WorldThreaded patches — 2No2Name
+
+The repository's `LICENSE` remains GNU LGPLv3.
+
+## Upstream project notes
+
+The upstream project aims to preserve vanilla-like behavior while ticking dimensions concurrently. Not every third-party mod is guaranteed to be thread-safe, so compatibility must be established with the actual modpack rather than assumed.
+
+The overall server MSPT can still be governed by the slowest individual dimension because the server waits for the threaded dimension ticks to finish before continuing.
