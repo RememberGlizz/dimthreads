@@ -9,7 +9,7 @@ plugins {
 }
 
 base {
-    archivesName = modid
+    archivesName = "cobbleclub-${modid}"
     version = "$modloader-mc$mcversion-v$modversion"
 }
 
