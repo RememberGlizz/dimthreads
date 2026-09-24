@@ -7,8 +7,14 @@
   "authors": [
     "$modauthor"
   ],
+  "contributors": [
+    "CobbleClub",
+    "CCr4ft3r",
+    "WearBlackAllDay",
+    "2No2Name"
+  ],
   "contact": {
-    "homepage": "https://www.curseforge.com/minecraft/mc-mods/dimthreads",
+    "homepage": "https://github.com/${github_project}",
     "sources": "https://github.com/${github_project}",
     "issues": "https://github.com/${github_project}/issues"
   },
